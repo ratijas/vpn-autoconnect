@@ -1,0 +1,92 @@
+#!/usr/bin/env osascript
+
+(**** BEGIN SHARED CODE ****)
+
+(*
+ * get service and configuration names from file /var/run/vpn-autoconnect-status.
+ *)
+on get_autoconnect_status()
+    set file_name to "/var/run/vpn-autoconnect-status"
+    try
+        set fileContents to (do shell script "cat " & quoted form of file_name)
+    on error errMsg
+        return true -- assume that if status not set, we should autoconnect by default
+    end try
+    if "true" is in fileContents then
+        return true
+    else
+        return false
+    end if
+end get_autoconnect_status
+
+
+(*
+ * get configuration for VPN from file /usr/local/etc/vpn.config.
+ * returns: {service_name, configuration_name}
+ *
+# here will be configuration file.
+# file must contain just two lines:
+# ```
+# VPN service name
+# service configuration name
+# ```
+# writen exactly like in System Preferences.  everything else ignored.
+#
+# it is an error if file does not exist or service name is empty.  however,
+# if second line is empty, `vpn-connect` would try to connect to the service's
+# current configuration.
+ *)
+on get_config()
+    set file_name to "/usr/local/etc/vpn.config"
+    try
+        set fileContents to (do shell script "cat " & quoted form of file_name)
+    on error errMsg
+        error "no configuration file"
+    end try
+
+    set lines_ to paragraphs of fileContents
+    set service_name to the first item of lines_
+    set config_name to ""
+    try
+        set config_name to the second item of lines_
+    end try
+    if config_name is "" then
+        set config_name to _get_current_service_config(service_name)
+    end if
+
+    return {service_name, config_name}
+end get_config
+
+
+(*
+ * helper function
+ *)
+on _get_current_service_config(_service)
+    local _config
+    tell application "System Events"
+        tell current location of network preferences
+            set _config to current configuration of service _service
+        end tell
+    end tell
+    return _config
+end _get_current_service_config
+
+(**** END SHARED CODE ****)
+
+
+on run
+	set config to get_config()
+
+	tell application "System Events"
+		tell current location of network preferences
+			set my_service to the service (first item of config)
+			set service_config to the second item of config
+
+			if configuration service_config of my_service is not connected then
+				error number 1
+			else
+				quit
+			end if
+		end tell
+	end tell
+end run

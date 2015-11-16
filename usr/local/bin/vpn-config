@@ -1,0 +1,6 @@
+#!/bin/sh
+
+if [ x"$EDITOR" == x ] ; then
+    EDITOR=nano
+fi
+$EDITOR /usr/local/etc/vpn.config

@@ -1,0 +1,15 @@
+#!/bin/sh
+tail /var/log/ppp.log | grep '\[DISCONNECT\]'
+if [ $? == 0 ] ; then
+    echo false > /var/run/vpn-autoconnect-status
+fi
+
+# MAJOR_MAC_VERSION=$(sw_vers -productVersion | awk -F '.' '{print $1 "." $2}')
+#
+# /etc/ppp/ip-down: for OS X 10.10 and above
+# 
+# #!/bin/sh
+# tail /var/log/ppp.log | grep '\[TERMINATE\]'
+# if [ $? == 0 ] ; then
+# echo false > /var/run/autoconnect_vpn
+# fi

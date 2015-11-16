@@ -1,0 +1,3 @@
+#!/bin/sh
+echo true > /var/run/vpn-autoconnect-status
+chmod 644   /var/run/vpn-autoconnect-status
